@@ -31,6 +31,9 @@ unit TemplateEngine;
 {$B-}    //Boolean short-circuit evaluation
 {$O+}    //Optimization on
 {$R-}    //Range checking off
+// make it work for Android
+// (have no time to revise strings indexing ;)
+{$ZEROBASEDSTRINGS OFF}
 {.$DEFINE SMARTYDEBUG}
 
 interface
@@ -1151,13 +1154,43 @@ type
     VariableValue: PVariableRecord;  //variable value
   end;
 
+  TClassRecord = class
+  protected
+    FClass: TClass;
+  end;
+
+  TCustomClassList = class(TStringList)
+  public
+    constructor Create; reintroduce;
+
+    procedure Add(const AName: string; AClass: TClass); reintroduce;
+    function GetClass(Index: Integer): TClass;
+  end;
+
+  TModifierList = class(TCustomClassList)
+  public
+    procedure Add(AModifier: TVariableModifierClass); reintroduce;
+    function GetModifier(Index: Integer): TVariableModifierClass;
+  end;
+
+  TFunctionList = class(TCustomClassList)
+  public
+    procedure Add(AFunction: TSmartyFunctionClass); reintroduce;
+    function GetFunction(Index: Integer): TSmartyFunctionClass;
+  end;
+
+  TNamespaceList = class(TCustomClassList)
+  public
+    procedure Add(ANamespace: TNamespaceProvider); reintroduce;
+  end;
+
   TSmartyInfoProvider = class
   private
     //modifiers
-    FModifiers: TStringList;
+    FModifiers: TModifierList;
 
     //function
-    FFunctions: TStringList;
+    FFunctions: TFunctionList;
 
   	procedure Init;
   public
@@ -1173,8 +1206,8 @@ type
   	FCompiled: boolean;
     FActions: TTemplateActions;
 
-  	//namespaces
-  	FNamespaces: TStringList;
+    //namespaces
+    FNamespaces: TNamespaceList;
     FSmartyNamespace: TSmartyProvider;
 
     FIsCache: boolean;
@@ -6474,7 +6507,7 @@ begin
         J := SmartyProvider.FModifiers.IndexOf(Modifier);
         if J >= 0 then
         begin
-          MAction.FModifier := TVariableModifierClass(SmartyProvider.FModifiers.Objects[J]);
+          MAction.FModifier := SmartyProvider.FModifiers.GetModifier(J);
           if not MAction.FModifier.CheckInputParams(Params) then
           begin
           	FreeAndNil(AAction);
@@ -6649,7 +6682,7 @@ begin
         J := SmartyProvider.FModifiers.IndexOf(Modifier);
         if J >= 0 then
         begin
-          MAction.FModifier := TVariableModifierClass(SmartyProvider.FModifiers.Objects[J]);
+          MAction.FModifier := SmartyProvider.FModifiers.GetModifier(J);
           if not MAction.FModifier.CheckInputParams(Params) then
           begin
           	FreeAndNil(AAction);
@@ -8840,12 +8873,8 @@ constructor TSmartyInfoProvider.Create;
 begin
 	inherited Create;
 
-  FModifiers := TStringList.Create;
-  FModifiers.CaseSensitive := false;
-  FModifiers.Sorted := true;
-  FFunctions := TStringList.Create;
-  FFunctions.CaseSensitive := false;
-  FFunctions.Sorted := true;
+  FModifiers := TModifierList.Create;
+  FFunctions := TFunctionList.Create;
 
   Init;
 end;
@@ -8934,23 +8963,13 @@ begin
 end;
 
 procedure TSmartyInfoProvider.AddModifier(AModifier: TVariableModifierClass);
-var
-	Name: string;
 begin
-	Name := AModifier.GetName;
-  if FModifiers.IndexOf(Name) >= 0 then
-  	raise ESmartyException.CreateRes(@sDuplicateModifierName);
-  FModifiers.AddObject(Name, TObject(AModifier));
+  FModifiers.Add(AModifier);
 end;
 
 procedure TSmartyInfoProvider.AddFunction(AFunction: TSmartyFunctionClass);
-var
-	Name: string;
 begin
-	Name := AFunction.GetName;
-  if FFunctions.IndexOf(Name) >= 0 then
-  	raise ESmartyException.CreateRes(@sDuplicateFunctionName);
-  FFunctions.AddObject(Name, TObject(AFunction));
+  FFunctions.Add(AFunction);
 end;
 
 procedure TSmartyInfoProvider.DeleteFunction(AFunction: TSmartyFunctionClass);
@@ -8980,9 +8999,7 @@ begin
   FIsCache := true;
   FVarCache := TList<TVariableCache>.Create;
 
-  FNamespaces := TStringList.Create;
-  FNamespaces.CaseSensitive := false;
-  FNamespaces.Sorted := true;
+  FNamespaces := TNamespaceList.Create;
 
   FSilentMode := true;
   FErrors := TStringList.Create;
@@ -9184,7 +9201,7 @@ begin
 
     if I >= 0 then
     begin
-    	Func := TSmartyFunctionClass(SmartyProvider.FFunctions.Objects[I]);
+      Func := SmartyProvider.FFunctions.GetFunction(I);
 
       InQuote := false;
       Stack := 0;
@@ -9234,14 +9251,12 @@ begin
 	I := SmartyProvider.FFunctions.IndexOf(AFunction);
 
   if I >= 0 then
-  	Result := TSmartyFunctionClass(SmartyProvider.FFunctions.Objects[I])
+    Result := SmartyProvider.FFunctions.GetFunction(I)
   else
   	Result := nil;
 end;
 
 destructor TSmartyEngine.Destroy;
-var
-	I: integer;
 begin
 	FActions.Free;
 
@@ -9250,20 +9265,13 @@ begin
 
 	FErrors.Free;
 
-	for I := 0 to FNamespaces.Count - 1 do
-  	FNamespaces.Objects[I].Free;
 	FNamespaces.Free;
   inherited Destroy;
 end;
 
 procedure TSmartyEngine.AddNamespace(ANamespace: TNamespaceProvider);
-var
-	Name: string;
 begin
-	Name := ANamespace.GetName;
-  if FNamespaces.IndexOf(Name) >= 0 then
-  	raise ESmartyException.CreateRes(@sDuplicateNamespaceName);
-  FNamespaces.AddObject(Name, ANamespace);
+  FNamespaces.Add(ANamespace);
 end;
 
 procedure TSmartyEngine.DeleteNamespace(ANamespace: TNamespaceProvider);
@@ -9648,6 +9656,75 @@ begin
   end
   else
     Result := '';
+end;
+
+{ TCustomClassList }
+
+procedure TCustomClassList.Add(const AName: string; AClass: TClass);
+var
+  LClassRecord: TClassRecord;
+begin
+  LClassRecord := TClassRecord.Create;
+  LClassRecord.FClass := AClass;
+  AddObject(AName, LClassRecord);
+end;
+
+constructor TCustomClassList.Create;
+begin
+  inherited Create(True);
+  CaseSensitive := False;
+  Sorted := True;
+end;
+
+function TCustomClassList.GetClass(Index: Integer): TClass;
+begin
+  Result := TClassRecord(Objects[Index]).FClass;
+end;
+
+{ TModifierList }
+
+procedure TModifierList.Add(AModifier: TVariableModifierClass);
+var
+  Name: string;
+begin
+  Name := AModifier.GetName;
+  if IndexOf(Name) >= 0 then
+    raise ESmartyException.CreateRes(@sDuplicateModifierName);
+  inherited Add(Name, AModifier);
+end;
+
+function TModifierList.GetModifier(Index: Integer): TVariableModifierClass;
+begin
+  Result := TVariableModifierClass(GetClass(Index));
+end;
+
+{ TFunctionList }
+
+procedure TFunctionList.Add(AFunction: TSmartyFunctionClass);
+var
+  Name: string;
+begin
+  Name := AFunction.GetName;
+  if IndexOf(Name) >= 0 then
+    raise ESmartyException.CreateRes(@sDuplicateFunctionName);
+  inherited Add(Name, AFunction);
+end;
+
+function TFunctionList.GetFunction(Index: Integer): TSmartyFunctionClass;
+begin
+  Result := TSmartyFunctionClass(GetClass(Index));
+end;
+
+{ TNamespaceList }
+
+procedure TNamespaceList.Add(ANamespace: TNamespaceProvider);
+var
+  Name: string;
+begin
+  Name := ANamespace.GetName;
+  if IndexOf(Name) >= 0 then
+    raise ESmartyException.CreateRes(@sDuplicateNamespaceName);
+  AddObject(Name, ANamespace);
 end;
 
 initialization
