@@ -36,7 +36,6 @@ unit TemplateEngine;
 interface
 
 uses
-  {VCL} Windows, Messages,
   Classes, SysUtils, StrUtils, DateUtils, Variants,
   Character, Generics.Defaults, Generics.Collections;
 
