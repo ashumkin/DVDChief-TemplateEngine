@@ -2608,14 +2608,13 @@ begin
     end;
     vtArray:
     begin
-    	Result.AValue := nil;
-    	GetMem(Result.AValue, SizeOf(TVariableArray));
+      Result.AValue := AllocMem(SizeOf(TVariableArray));
       ArrayData := Result.AValue;
       PVariableArray(Result.AValue).Count := PVariableArray(Self.AValue).Count;
       PVariableArray(Result.AValue).Reference := PVariableArray(Self.AValue).Reference;
       if PVariableArray(Self.AValue).Count > 0 then
       begin
-      	GetMem(ArrayData.Data, ArrayData.Count * SizeOf(TVariableArrayItem));
+        ArrayData.Data := AllocMem(ArrayData.Count * SizeOf(TVariableArrayItem));
         for I := 0 to ArrayData.Count - 1 do
         begin
         	ArrayData.Data[I].Key := nil;
@@ -2791,10 +2790,9 @@ var
   I: integer;
 begin
   VarType := vtArray;
-  Self.AValue := nil;
-  GetMem(Self.AValue, SizeOf(TVariableArray));
+  Self.AValue := AllocMem(SizeOf(TVariableArray));
   ArrayData := Self.AValue;
-  GetMem(ArrayData.Data, AValue * SizeOf(TVariableArrayItem));
+  ArrayData.Data := AllocMem(AValue * SizeOf(TVariableArrayItem));
   ArrayData.Count := AValue;
   ArrayData.Reference := AReference;
 
@@ -3874,7 +3872,7 @@ begin
     Cache.VariableValue^ := VariableValue;
   end
   else begin
-    GetMem(Cache.VariableValue, SizeOf(TVariableRecord));
+    Cache.VariableValue := AllocMem(SizeOf(TVariableRecord));
     Cache.VariableName := AName;
     Cache.VariableValue^ := VariableValue;
     FCaptureCache.Add(Cache);
@@ -9103,7 +9101,7 @@ begin
         CacheItem.Namespace := ANamespace;
         CacheItem.Index := AIndex;
         CacheItem.VariableName := AVariableName;
-        GetMem(CacheItem.VariableValue, SizeOf(TVariableRecord));
+        CacheItem.VariableValue := AllocMem(SizeOf(TVariableRecord));
         CacheItem.VariableValue^ := ANamespace.GetVariable(AIndex, AVariableName);
         FVarCache.Add(CacheItem);
 
