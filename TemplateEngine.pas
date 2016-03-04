@@ -3643,7 +3643,11 @@ var
 	I: integer;
 begin
 	for I := 0 to Count - 1 do Items[I].Finalize;
+  {$IF COMPILERVERSION < 25} // < XE4
   Free;
+  {$ELSE}
+  DisposeOf;
+  {$ENDIF}
 end;
 
 procedure TVarList.DeleteElement(Index: integer);
@@ -3708,7 +3712,12 @@ destructor TForEachList.Destroy;
 var
 	I: integer;
 begin
-  for I := Count - 1 downto 0 do Items[I].Free;
+  for I := Count - 1 downto 0 do
+    {$IF COMPILERVERSION < 25} // < XE4
+    Items[I].Free;
+    {$ELSE}
+    Items[I].DisposeOf;
+    {$ENDIF}
 	CurrentRecords.Free;
   inherited Destroy;
 end;
