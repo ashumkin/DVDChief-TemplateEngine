@@ -53,10 +53,18 @@ type
     procedure TestModifierTruncateMiddleWordTrue;
   end;
 
+  TTestCustomFunctions = class(TCustomTestTSmartyEngine)
+  protected
+  public
+  published
+    procedure TestCustomFunctionRightAdjustment;
+  end;
+
 implementation
 
 uses
-  SysUtils;
+  SysUtils,
+  TemplateEngineCustomFunctions;
 
 type
   TTestNamespaceStrings = class(TNamespaceProvider)
@@ -281,8 +289,17 @@ begin
   CheckEquals('truncate: var!-', FEngine.Execute);
 end;
 
+{ TTestCustomFunctions }
+
+procedure TTestCustomFunctions.TestCustomFunctionRightAdjustment;
+begin
+  CompileExpression('{right(10, $strings.key)}');
+  CheckEquals('   var!key', FEngine.Execute);
+end;
+
 initialization
   RegisterTest(TTestTSmartyEngineSimple.Suite);
   RegisterTest(TTestTSmartyEngineModifiers.Suite);
   RegisterTest(TTestTSmartyEngineFunctions.Suite);
+  RegisterTest(TTestCustomFunctions.Suite);
 end.
