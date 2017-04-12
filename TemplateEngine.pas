@@ -242,7 +242,7 @@ type
     procedure DeleteElement(Index: integer);
     procedure AddArrayPrefix(AVariable: TVarList; Index: integer);
     function IsSimpleVariable(out VarName: string): boolean;
-    function CheckTopLevel(AName: string): boolean;
+    function CheckTopLevel(const AName: string): boolean;
     function IsTopValueLevel(out AName: string): boolean;
   end;
 
@@ -275,16 +275,16 @@ type
 
   TForEachList = class (TList<TForEachData>)
   private
-  	CurrentRecords: TList<integer>;
+  	CurrentRecords: TList<integer>; // FI:C107
     procedure EnterForEach(AList: TForEachData);
     procedure ExitForEach;
     function InForEach: boolean;
-    function FindItemRecord(AItemName: string; out ARecord: TForEachData): boolean;
-		function FindKeyRecord(AKeyName: string; out ARecord: TForEachData): boolean;
+    function FindItemRecord(const AItemName: string; out ARecord: TForEachData): boolean;
+		function FindKeyRecord(const AKeyName: string; out ARecord: TForEachData): boolean;
   public
     constructor Create;
     destructor Destroy; override;
-  	function FindRecord(AName: string; out ARecord: TForEachData): boolean;
+  	function FindRecord(const AName: string; out ARecord: TForEachData): boolean;
   end;
 
   TCaptureCache = record
@@ -294,14 +294,14 @@ type
 
   TCaptureArrayItem = class
   private
-    IsActive: boolean;
-    ItemName: string;
-    Index: integer;
-    VarData: PVariableArray;
-    procedure Enter(AName: string; AIndex: integer; AVarData: PVariableArray);
+    IsActive: boolean; // FI:C107
+    ItemName: string; // FI:C107
+    Index: integer; // FI:C107
+    VarData: PVariableArray; // FI:C107
+    procedure Enter(const AName: string; AIndex: integer; AVarData: PVariableArray);
     procedure IncIndex;
     procedure Exit;
-    function IsItemName(AName: string): boolean;
+    function IsItemName(const AName: string): boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -315,9 +315,9 @@ type
   	FForEachList: TForEachList;
     FActiveCapture: TCaptureArrayItem;
     procedure ClearCaptureCache;
-    function FindCaptureItem(AName: string; var Cache: TCaptureCache): boolean;
-    procedure SetCaptureItem(AName: string; VariableValue: TVariableRecord);
-    procedure RemoveCaptureItem(AName: string);
+    function FindCaptureItem(const AName: string; var Cache: TCaptureCache): boolean;
+    procedure SetCaptureItem(const AName: string; VariableValue: TVariableRecord);
+    procedure RemoveCaptureItem(const AName: string);
   public
   	constructor Create(AEngine: TSmartyEngine);
     destructor Destroy; override;
@@ -326,9 +326,9 @@ type
     class function UseCache: boolean; override;
     procedure GetIndexProperties(var AMin, AMax: integer); override;
     function GetVariable(AIndex: integer; AVarName: string): TVariableRecord; override;
-  	function GetSmartyVariable(AVarName: string; AVarDetails: TVarList;
+  	function GetSmartyVariable(const AVarName: string; AVarDetails: TVarList;
     	var NeedFinalize: boolean): TVariableRecord;
-    function GetDetachVariable(AVarName: string; AVarDetails: TVarList;
+    function GetDetachVariable(const AVarName: string; AVarDetails: TVarList;
     	var NeedFinalize: boolean): TVariableRecord;
   end;
 
@@ -848,13 +848,13 @@ type
     class function ParseFunction(ACommand: string): TStringList;
     class procedure CheckFunction(ACommand: TStringList;
     	AValid: array of string);
-    class function GetAttributeValue(ACommand: TStringList; AAtribute: string;
-    	ADefault: string = ''): string;
+    class function GetAttributeValue(ACommand: TStringList; const AAtribute: string;
+    	const ADefault: string = ''): string;
     class procedure ExtractFunctionItem(ACommand: TStringList; Index: integer;
     	var Name, Value: string);
     class procedure ParseVariable(AVariable: string; AVarList: TVarList);
 		class procedure GetVariableProperties(AEngine: TSmartyEngine;
-			AVariable: string; var Namespace: TNamespaceProvider;
+			const AVariable: string; var Namespace: TNamespaceProvider;
       var Index: integer; var VarName: string; var AVarList: TVarList);
     class function IsAction(AEngine: TSmartyEngine; ACommand: string;
     	var AAction: TTemplateAction): boolean; virtual;
@@ -867,7 +867,7 @@ type
     property Output: string read FOutput;
 
     constructor Create(AEngine: TSmartyEngine); override;
-    constructor CreateOutput(AEngine: TSmartyEngine; AOutput: string);
+    constructor CreateOutput(AEngine: TSmartyEngine; const AOutput: string);
     function Execute: string; override;
 		class function IsAction(AEngine: TSmartyEngine;	ACommand: string;
     	var AAction: TTemplateAction): boolean; override;
@@ -889,7 +889,7 @@ type
     FVarName: string;
     FVarDetails: TVarList;
     FModifiers: TObjectList<TModifierAction>;
-    procedure SetVariable(AEngine: TSmartyEngine; AVariable: string);
+    procedure SetVariable(AEngine: TSmartyEngine; const AVariable: string);
   public
     constructor Create(AEngine: TSmartyEngine); override;
     destructor Destroy; override;
@@ -1014,7 +1014,7 @@ type
   	FOperation: TOperation;
   public
     constructor Create(AEngine: TSmartyEngine); override;
-    constructor CreateOperation(AEngine: TSmartyEngine; AExpr: string);
+    constructor CreateOperation(AEngine: TSmartyEngine; const AExpr: string);
     destructor Destroy; override;
    	function Evaluate: boolean; override;
   end;
@@ -1226,16 +1226,16 @@ type
 
     procedure Init;
     function GetVariable(const ANamespace: TNamespaceProvider; AIndex: integer;
-    	AVariableName: string; ADetails: TVarList; var NeedFinalize: boolean): TVariableRecord;
+    	const AVariableName: string; ADetails: TVarList; var NeedFinalize: boolean): TVariableRecord;
     function GetVariableDetails(AVariable: TVariableRecord; ADetails: TVarList): TVariableRecord;
 		function IsFunction(ACommand: string; var Func: TSmartyFunctionClass;
 			var Params: string; var Modifiers: string): boolean;
-    function GetFunction(AFunction: string): TSmartyFunctionClass;
+    function GetFunction(const AFunction: string): TSmartyFunctionClass;
     procedure SetIsCache(Value: boolean);
   public
   	constructor Create;
     destructor Destroy; override;
-    function Compile(ADocument: string; var Errors: TStringList): boolean;
+    function Compile(const ADocument: string; var Errors: TStringList): boolean;
     function Execute: string;
     procedure ClearCache; overload;
     procedure ClearCache(ANamespace: TNamespaceProvider); overload;
@@ -1285,7 +1285,7 @@ type
 //convertion rountines
 function DateRecordToStr(Value: TDateRecord): string;         //use FormatSettings
 function DateRecordToString(Value: TDateRecord): string;      //FormatSettings independent
-function StringToDateRecord(Value: string): TDateRecord;
+function StringToDateRecord(const Value: string): TDateRecord;
 function DateTimeFromRecord(Value: TDateRecord): TDateTime;
 function DateTimeToRecord(Value: TDateTime): TDateRecord;
 function IsEmpty(Value: TDateRecord): boolean;
@@ -1294,7 +1294,7 @@ function GetDateRecordVariant(AYear: word; AMonth: word = 0; ADay: word = 0): Va
 function GetStartDate(Value: TDateRecord): TDateTime;
 function GetEndDate(Value: TDateRecord): TDateTime;
 
-function DoValidIdent(Value: string): string;
+function DoValidIdent(const Value: string): string;
 
 function ParseEscapes(const AStr: string): string;
 function SmartyTrim(const S: string): string;
@@ -1302,18 +1302,18 @@ function SmartyTrimLeft(const S: string): string;
 function SmartyTrimRight(const S: string): string;
 function UCWords(const AStr: string; ACapitalizeDigits: boolean = false): string;
 function CountCharacters(const AStr: string; ACountWhitespace: boolean = false): integer;
-function TruncateString(const AStr: string; ALength: integer = 80; AEtc: string = '...';
+function TruncateString(const AStr: string; ALength: integer = 80; const AEtc: string = '...';
   ABreakWords: boolean = false; AMiddle: boolean = false): string;
-function Strip(const AStr: string; AStripStr: string = ' '): string;
+function Strip(const AStr: string; const AStripStr: string = ' '): string;
 function StripTags(const AStr: string; ANoSpace: boolean = true;
 	AParse: boolean = true): string;
-function Spacify(const AStr: string; ASpacifyStr: string = ' '): string;
+function Spacify(const AStr: string; const ASpacifyStr: string = ' '): string;
 function Wordwrap(const Line: string; MaxCol: Integer = 80;
   const BreakStr: string = sLineBreak): string;
 function IsLineBreak(C: char): boolean; inline;
 function CountParagraphs(const AStr: string): integer;
 function CountWords(const AStr: string): integer;
-function IndentString(const AStr: string; IndentStr: string = ' '): string;
+function IndentString(const AStr: string; const IndentStr: string = ' '): string;
 
 function XMLEncode(const AStr: string): string;
 function HTMLEncode(const AStr: string): string;
@@ -1325,7 +1325,7 @@ procedure RegisterModifier(AModifier: TVariableModifierClass);
 procedure RegisterFunction(AFunction: TSmartyFunctionClass);
 procedure UnregisterFunction(AFunction: TSmartyFunctionClass);
 
-function GetFileContent(AFilename: string; AEncoding: TEncoding): string;
+function GetFileContent(const AFilename: string; AEncoding: TEncoding): string;
 
 resourcestring
 	sIncorrectArrayItem = 'Invalid key value or array index';
@@ -1412,7 +1412,7 @@ begin
   Result[2] := ADay;
 end;
 
-function TryStringToBool(AValue: string; var B: boolean): boolean;
+function TryStringToBool(const AValue: string; var B: boolean): boolean;
 begin
   Result := true;
 	if (CompareText('true', AValue) = 0) or (CompareText('1', AValue) = 0) then B := true
@@ -1469,7 +1469,7 @@ begin
 	Result := (C <= ' ') or TCharacter.IsWhiteSpace(C);
 end;
 
-function GetChar(S: string; Index: integer): Char; inline;
+function GetChar(const S: string; Index: integer): Char; inline;
 begin
   if Index <= Length(S) then
     Result := S[Index]
@@ -1658,7 +1658,7 @@ var
   WasDelimiter, IsNumber: boolean;
   Ch, iCh: char;
   S: string;
-begin
+begin // FI:C101
   Result := '';
   WasDelimiter := true;
   I := 1;
@@ -1726,7 +1726,7 @@ begin
   end;
 end;
 
-function TruncateString(const AStr: string; ALength: integer = 80; AEtc: string = '...';
+function TruncateString(const AStr: string; ALength: integer = 80; const AEtc: string = '...';
   ABreakWords: boolean = false; AMiddle: boolean = false): string;
 var
   I, L: integer;
@@ -1768,7 +1768,7 @@ begin
   end;
 end;
 
-function Strip(const AStr: string; AStripStr: string = ' '): string;
+function Strip(const AStr: string; const AStripStr: string = ' '): string;
 var
   I: integer;
   WasWhiteSpace: boolean;
@@ -1796,7 +1796,7 @@ begin
 end;
 
 //idea for strip_tags from php sources
-function StripTags(const AStr: string; ANoSpace: boolean = true;
+function StripTags(const AStr: string; ANoSpace: boolean = true; // FI:C103
 	AParse: boolean = true): string;
 var
   Br, I, Depth: integer;
@@ -1812,7 +1812,7 @@ var
       Result := #0;
   end;
 
-begin
+begin // FI:C101
   Result := '';
   S := Strip(AStr);
 
@@ -2027,7 +2027,7 @@ begin
   end;
 end;
 
-function Spacify(const AStr: string; ASpacifyStr: string = ' '): string;
+function Spacify(const AStr: string; const ASpacifyStr: string = ' '): string;
 var
   I, L: integer;
 begin
@@ -2045,7 +2045,7 @@ begin
     Result := '';
 end;
 
-function Wordwrap(const Line: string; MaxCol: Integer = 80;
+function Wordwrap(const Line: string; MaxCol: Integer = 80; // FI:C103
   const BreakStr: string = sLineBreak): string;
 const
   QuoteChars = ['''', '"'];
@@ -2062,7 +2062,7 @@ var
     Result := TCharacter.IsWhiteSpace(Ch) or (Ch = #$0009);
   end;
 
-begin
+begin // FI:C101
   Col := 1;
   Pos := 1;
   LinePos := 1;
@@ -2201,7 +2201,7 @@ begin
   end;
 end;
 
-function IndentString(const AStr: string; IndentStr: string = ' '): string;
+function IndentString(const AStr: string; const IndentStr: string = ' '): string;
 var
   I: integer;
   Ch: char;
@@ -2272,7 +2272,7 @@ function HTMLEncodeEntities(const AStr: string): string;
 var
   I: integer;
   Ch: char;
-begin
+begin // FI:C101
   Result := '';
   for I := 1 to Length(AStr) do
   begin
@@ -3119,7 +3119,7 @@ begin
   end;
 end;
 
-class function TVariableRecord.DoCompareRelationship(ALeft, ARight: TVariableRecord;
+class function TVariableRecord.DoCompareRelationship(ALeft, ARight: TVariableRecord; // FI:C103
 	AOperation: TCompareOperation): TVariableRelatioship;
 var
 	CompareType: TVariableType;
@@ -3142,7 +3142,7 @@ const
 {DateT} (vtBoolean, vtBoolean, vtFloat,     vtFloat,     vtDateTime,   vtDateLoose, vtDateTime,  vtDateTime,   vtDateTime),
 {Str}   (vtBoolean, vtBoolean, vtFloat,     vtFloat,     vtDateStrict, vtDateLoose, vtDateTime,  vtString,     vtString),
 {Array} (vtBoolean, vtBoolean, vtInteger,   vtFloat,     vtDateStrict, vtDateLoose, vtDateTime,  vtString,     vtArray));
-begin
+begin // FI:C101
 	if AOperation <> coSEq then
   begin
   	CompareType := CBaseTypes[ALeft.VarType, ARight.VarType];
@@ -3328,13 +3328,13 @@ begin
   Result := CRelationshipToBoolean[AOperation, Realationship];
 end;
 
-class function TVariableRecord.DoIntFloatOp(ALeft, ARight: TVariableRecord;
+class function TVariableRecord.DoIntFloatOp(ALeft, ARight: TVariableRecord; // FI:C103
 	AOperation: TBinaryOperation): TVariableRecord;
 var
 	I1, I2: integer;
   F1, F2: double;
   CanI1, CanI2, CanF1, CanF2: boolean;
-begin
+begin // FI:C101
   CanI1 := ALeft.CanConvertToInt(I1);
   CanI2 := ARight.CanConvertToInt(I2);
   if CanI1 and CanI2 then
@@ -3411,20 +3411,21 @@ var
   F1, F2: double;
   CanF1, CanF2: boolean;
 begin
+  Assert(AOperation = voDivide, 'For voDivide only! (yet)');
   CanF1 := ALeft.CanConvertToFloat(F1);
   CanF2 := ARight.CanConvertToFloat(F2);
   if CanF1 and CanF2 then
+    Result := F1 / F2
+  else
   begin
-    if AOperation = voDivide then Result := F1 / F2;
-  end
-  else begin
-    if not CanF1 then F1 := ALeft.ToFloat;
-    if not CanF2 then F2 := ARight.ToFloat;
-    if AOperation = voDivide then
-      if F2 <> 0 then
-        Result := F1 / F2
-      else
-        Result := TVariableRecord.Null;
+    if not CanF1 then
+      F1 := ALeft.ToFloat;
+    if not CanF2 then
+      F2 := ARight.ToFloat;
+    if F2 <> 0 then
+      Result := F1 / F2
+    else
+      Result := TVariableRecord.Null;
   end;
 end;
 
@@ -3678,7 +3679,7 @@ begin
   	Result := false;
 end;
 
-function TVarList.CheckTopLevel(AName: string): boolean;
+function TVarList.CheckTopLevel(const AName: string): boolean;
 begin
 	if (Count >= 1) and (Items[0].PartType = vptValue) and
     (CompareText(Items[0], AName) = 0) then
@@ -3740,7 +3741,7 @@ begin
 	Result := CurrentRecords.Count > 0;
 end;
 
-function TForEachList.FindItemRecord(AItemName: string; out ARecord: TForEachData): boolean;
+function TForEachList.FindItemRecord(const AItemName: string; out ARecord: TForEachData): boolean;
 var
 	I: integer;
 begin
@@ -3753,7 +3754,7 @@ begin
   	end;
 end;
 
-function TForEachList.FindKeyRecord(AKeyName: string; out ARecord: TForEachData): boolean;
+function TForEachList.FindKeyRecord(const AKeyName: string; out ARecord: TForEachData): boolean;
 var
 	I: integer;
 begin
@@ -3766,7 +3767,7 @@ begin
   	end;
 end;
 
-function TForEachList.FindRecord(AName: string;
+function TForEachList.FindRecord(const AName: string;
 	out ARecord: TForEachData): boolean;
 var
 	I: integer;
@@ -3804,7 +3805,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TCaptureArrayItem.Enter(AName: string; AIndex: integer; AVarData: PVariableArray);
+procedure TCaptureArrayItem.Enter(const AName: string; AIndex: integer; AVarData: PVariableArray);
 begin
   IsActive := true;
   ItemName := AName;
@@ -3823,7 +3824,7 @@ begin
   VarData := nil;
 end;
 
-function TCaptureArrayItem.IsItemName(AName: string): boolean;
+function TCaptureArrayItem.IsItemName(const AName: string): boolean;
 begin
   Result := IsActive and (CompareText(ItemName, AName) = 0);
 end;
@@ -3861,7 +3862,7 @@ begin
   end;
 end;
 
-function TSmartyProvider.FindCaptureItem(AName: string; var Cache: TCaptureCache): boolean;
+function TSmartyProvider.FindCaptureItem(const AName: string; var Cache: TCaptureCache): boolean;
 var
   I: integer;
 begin
@@ -3873,7 +3874,7 @@ begin
   end;
 end;
 
-procedure TSmartyProvider.SetCaptureItem(AName: string; VariableValue: TVariableRecord);
+procedure TSmartyProvider.SetCaptureItem(const AName: string; VariableValue: TVariableRecord);
 var
   Cache: TCaptureCache;
 begin
@@ -3890,7 +3891,7 @@ begin
   end;
 end;
 
-procedure TSmartyProvider.RemoveCaptureItem(AName: string);
+procedure TSmartyProvider.RemoveCaptureItem(const AName: string);
 var
   Cache: TCaptureCache;
   I: integer;
@@ -3934,14 +3935,14 @@ begin
 	Result :=  TVariableRecord.Null;
 end;
 
-function TSmartyProvider.GetSmartyVariable(AVarName: string;
+function TSmartyProvider.GetSmartyVariable(const AVarName: string;
 	AVarDetails: TVarList; var NeedFinalize: boolean): TVariableRecord;
 var
 	S, VarName: string;
   VarDetails: TVarList;
   FERec: TForEachData;
   CacheRec: TCaptureCache;
-begin
+begin // FI:C101
 	Result :=  TVariableRecord.Null;
   NeedFinalize := true;
 
@@ -4009,7 +4010,7 @@ begin
 	NeedFinalize := NeedFinalize and ((Result.VarType = vtString) or (Result.VarType = vtArray));
 end;
 
-function TSmartyProvider.GetDetachVariable(AVarName: string; AVarDetails: TVarList;
+function TSmartyProvider.GetDetachVariable(const AVarName: string; AVarDetails: TVarList;
 	var NeedFinalize: boolean): TVariableRecord;
 var
 	FERec: TForEachData;
@@ -4629,7 +4630,8 @@ begin
   end;
 
   S := '';
-  for I := 1 to IndentCount do S := S + IndentStr;
+  for I := 1 to IndentCount do // FI:W528
+    S := S + IndentStr;
 
   AVariable.SetString(IndentString(AVariable.ToString, S));
 end;
@@ -5005,26 +5007,21 @@ var
   I: integer;
   S: string;
 begin
+  Result := TVariableRecord.Null;
 	V1 := GetParam(0, AParams);
   V2 := GetParam(1, AParams);
-	case V1.VarType of
-    vtArray:
+	if V1.VarType = vtArray then
+  begin
+    S := V2.ToString;
+    if S <> '' then
     begin
-      S := V2.ToString;
-      if S <> '' then
-      begin
-        for I := 0 to PVariableArray(V1.AValue).Count - 1 do
-          if CompareText(string(PVariableArray(V1.AValue).Data[I].Key), S) = 0 then
-          begin
-            Result := PVariableArray(V1.AValue).Data[I].Item.Clone;
-            Break;
-          end;
-      end
-      else
-        Result := TVariableRecord.Null;
-    end;
-  else
-  	Result := TVariableRecord.Null;
+      for I := 0 to PVariableArray(V1.AValue).Count - 1 do
+        if CompareText(string(PVariableArray(V1.AValue).Data[I].Key), S) = 0 then
+        begin
+          Result := PVariableArray(V1.AValue).Data[I].Item.Clone;
+          Break;
+        end;
+    end
   end;
 end;
 
@@ -5367,7 +5364,7 @@ begin
 
   S := '';
   if IndentCount >= 1 then
-    for I := 1 to IndentCount do S := S + IndentStr;
+    for I := 1 to IndentCount do S := S + IndentStr; // FI:W528
 
   Result := IndentString(GetParam(0, AParams).ToString, S);
 end;
@@ -5737,7 +5734,7 @@ var
   DLFrom, DLTo: TDateRecord;
   DT: TDateTime;
   Years: integer;
-begin
+begin // FI:C101
 	V1 := GetParam(0, AParams);
   case V1.VarType of
     vtInteger:
@@ -6120,7 +6117,7 @@ begin
 end;
 
 class function TTemplateAction.GetAttributeValue(ACommand: TStringList;
-	AAtribute: string; ADefault: string = ''): string;
+	const AAtribute: string; const ADefault: string = ''): string;
 var
 	I: integer;
   Name, Value: string;
@@ -6166,7 +6163,7 @@ var
   Ch: char;
   InArrayIndex, SkipNextDot: boolean;
   Part: TVariablePart;
-begin
+begin // FI:C101
   AVariable := AnsiUpperCase(AVariable);
 
   I := 1;
@@ -6234,7 +6231,7 @@ begin
 end;
 
 class procedure TTemplateAction.GetVariableProperties(AEngine: TSmartyEngine;
-	AVariable: string; var Namespace: TNamespaceProvider; var Index: integer;
+	const AVariable: string; var Namespace: TNamespaceProvider; var Index: integer;
   var VarName: string; var AVarList: TVarList);
 var
   NamespaceIndex: integer;
@@ -6290,7 +6287,7 @@ begin
 end;
 
 class function TTemplateAction.IsAction(AEngine: TSmartyEngine;
-	ACommand: string; var AAction: TTemplateAction): boolean;
+	ACommand: string; var AAction: TTemplateAction): boolean; // FI:O801
 begin
 	Result := false;
   AAction := nil;
@@ -6304,7 +6301,7 @@ begin
   FActionType := tatRawOutput;
 end;
 
-constructor TRawOutputAction.CreateOutput(AEngine: TSmartyEngine; AOutput: string);
+constructor TRawOutputAction.CreateOutput(AEngine: TSmartyEngine; const AOutput: string);
 begin
 	inherited Create(AEngine);
   FOutput := AOutput;
@@ -6394,12 +6391,12 @@ begin
 end;
 
 procedure TVariableOutputAction.SetVariable(AEngine: TSmartyEngine;
-	AVariable: string);
+	const AVariable: string);
 begin
 	GetVariableProperties(AEngine, AVariable, FNamespace, FIndex, FVarName, FVarDetails);
 end;
 
-class function TVariableOutputAction.IsAction(AEngine: TSmartyEngine;
+class function TVariableOutputAction.IsAction(AEngine: TSmartyEngine; // FI:C103
 	ACommand: string; var AAction: TTemplateAction): boolean;
 var
 	I, J: integer;
@@ -6409,7 +6406,7 @@ var
   Params: TStringList;
   InQuote: boolean;
   MAction: TModifierAction;
-begin
+begin // FI:C101
 	if (ACommand[1] = '$') then
   begin
   	Result := true;
@@ -6592,7 +6589,7 @@ begin
   end;
 end;
 
-class function TFuncOutputAction.IsAction(AEngine: TSmartyEngine;
+class function TFuncOutputAction.IsAction(AEngine: TSmartyEngine; // FI:C103
 	ACommand: string; var AAction: TTemplateAction): boolean;
 var
 	I, J: integer;
@@ -6603,7 +6600,7 @@ var
   Params: TStringList;
   InQuote: boolean;
   MAction: TModifierAction;
-begin
+begin // FI:C101
 	if AEngine.IsFunction(ACommand, FuncClass, FuncParams, Modifiers) then
   begin
   	Result := true;
@@ -7129,7 +7126,7 @@ var
   Ch: char;
 	I, J: integer;
   D: double;
-begin
+begin // FI:C101
 	IntConst := true;
 	Str := GetChar(S, Index);
 	Inc(Index);
@@ -7342,7 +7339,7 @@ end;
 procedure TOperatorItem.ScanStr(const S: string; var Index: integer);
 var
 	Ch: char;
-begin
+begin // FI:C101
 	Ch := GetChar(S, Index);
   Inc(Index);
 	case Ch of
@@ -7635,7 +7632,7 @@ class function TOperation.Parse(AEngine: TSmartyEngine; S: string): TOperation;
     AFrom.OwnsObjects := true;
   end;
 
-  function AnalyzeParseData(Data: TObjectList<TExpressionItem>): TOperation;
+  function AnalyzeParseData(Data: TObjectList<TExpressionItem>): TOperation; // FI:C103
   var
   	I, J, Stack: integer;
     EItem, LItem, RItem: TExpressionItem;
@@ -8041,7 +8038,7 @@ function TOpOperator.Evaluate(AEngine: TSmartyEngine; var NeedFinalize: boolean)
 var
   LeftVar, RightVar: TVariableRecord;
   LeftFinalize, RightFinalize: boolean;
-begin
+begin // FI:C101
   LeftFinalize := false;
   RightFinalize := false;
 	if not (FOperator in [opLogicalNot, opBitwiseNot]) then
@@ -8177,7 +8174,7 @@ begin
   FOperation := nil;
 end;
 
-constructor TSimpleIf.CreateOperation(AEngine: TSmartyEngine; AExpr: string);
+constructor TSimpleIf.CreateOperation(AEngine: TSmartyEngine; const AExpr: string);
 begin
 	Create(AEngine);
   FOperation := TOperation.Parse(AEngine, AExpr);
@@ -8329,7 +8326,7 @@ begin
   inherited Destroy;
 end;
 
-function TIfOutputAction.ContinueIf(AEngine: TSmartyEngine; ACommand: string;
+function TIfOutputAction.ContinueIf(AEngine: TSmartyEngine; ACommand: string; // FI:O801
 	var AState: integer; var AActions: TTemplateActions): boolean;
 var
 	ElseAction: TElseIfAction;
@@ -8455,7 +8452,7 @@ var
   I, LMin, LMax: integer;
   VarRec: TVariableRecord;
 	NeedFinalize: boolean;
-begin
+begin // FI:C101
   if not FNamespaceBased then
 	  VarRec := FEngine.GetVariable(FNamespace, FIndex, FVarName, FVarDetails, NeedFinalize);
   Result := '';
@@ -8522,7 +8519,7 @@ begin
 end;
 
 function TForEachOutputAction.ContinueForEach(AEngine: TSmartyEngine;
-	ACommand: string; var AState: integer; var AActions: TTemplateActions): boolean;
+	ACommand: string; var AState: integer; var AActions: TTemplateActions): boolean; // FI:O801
 begin
   if IsTag('/foreach', ACommand, true) then
   begin
@@ -8549,7 +8546,7 @@ var
   S, VarName: string;
   I, NamespaceIndex: integer;
   NamespaceProvider: TNamespaceProvider;
-begin
+begin // FI:C101
 	AAction := nil;
   Result := false;
 	if IsTagAndGetCommand('foreach', ACommand) then
@@ -8625,14 +8622,14 @@ begin
   inherited Destroy;
 end;
 
-function TCaptureArrayAction.Execute: string;
+function TCaptureArrayAction.Execute: string; // FI:C103
 var
   VarRec, NewVar, ResVar: TVariableRecord;
 	NeedFinalize, NeedResFinalize, Include: boolean;
   ARec: PVariableArray;
   I: Integer;
   Indexes: TList<integer>;
-begin
+begin // FI:C101
   VarRec := FEngine.GetVariable(FNamespace, FIndex, FVarName, FVarDetails, NeedFinalize);
   try
     if VarRec.IsArray then
@@ -8889,7 +8886,7 @@ begin
 end;
 
 procedure TSmartyInfoProvider.Init;
-begin
+begin // FI:C101
   //default modifiers
   AddModifier(TCapitalizeModifier);
   AddModifier(TCatModifier);
@@ -9061,14 +9058,14 @@ begin
 end;
 
 function TSmartyEngine.GetVariable(const ANamespace: TNamespaceProvider;
-	AIndex: integer; AVariableName: string; ADetails: TVarList;
+	AIndex: integer; const AVariableName: string; ADetails: TVarList;
   var NeedFinalize: boolean): TVariableRecord;
 var
 	I: integer;
   CacheItem: TVariableCache;
   VarFound: boolean;
   V: TVariableRecord;
-begin
+begin // FI:C101
 	if ANamespace = FSmartyNamespace then
   begin
   	Result := FSmartyNamespace.GetSmartyVariable(AVariableName, ADetails,
@@ -9199,7 +9196,7 @@ var
   InQuote: boolean;
   Stack: integer;
   SFunc: string;
-begin
+begin // FI:C101
 	ACommand := SmartyTrim(ACommand);
   Result := false;
   K := Pos('(', ACommand);
@@ -9253,7 +9250,7 @@ begin
   end;
 end;
 
-function TSmartyEngine.GetFunction(AFunction: string): TSmartyFunctionClass;
+function TSmartyEngine.GetFunction(const AFunction: string): TSmartyFunctionClass;
 var
 	I: integer;
 begin
@@ -9291,9 +9288,9 @@ begin
   if I >= 0 then FNamespaces.Delete(I);
 end;
 
-function TSmartyEngine.Compile(ADocument: string; var Errors: TStringList): boolean;
+function TSmartyEngine.Compile(const ADocument: string; var Errors: TStringList): boolean;
 
-	function SkipAllLiteralEnd(S: string; var IndexStart, IndexEnd: integer): boolean;
+	function SkipAllLiteralEnd(S: string; var IndexStart, IndexEnd: integer): boolean; // FI:W521
   var
   	Pos1, Pos2: integer;
     Str: string;
@@ -9321,7 +9318,7 @@ function TSmartyEngine.Compile(ADocument: string; var Errors: TStringList): bool
     end;
   end;
 
-	function CompilePart(S: string; AActions: TTemplateActions;
+	function CompilePart(S: string; AActions: TTemplateActions; // FI:C103
   	BreakAction: TNestAction; var AStart: integer): string;
   var
   	Output, Return, Smarty: string;
@@ -9533,7 +9530,7 @@ begin
 	Result := Format('%.4d-%.2d-%.2d', [Value.Year, Value.Month, Value.Day]);
 end;
 
-function StringToDateRecord(Value: string): TDateRecord;
+function StringToDateRecord(const Value: string): TDateRecord;
 begin
   Result.Year := StrToInt(Copy(Value, 1, 4));
   Result.Month := StrToInt(Copy(Value, 6, 2));
@@ -9597,7 +9594,7 @@ begin
   	Result := EndOfTheYear(Now);
 end;
 
-function DoValidIdent(Value: string): string;
+function DoValidIdent(const Value: string): string;
   function Alpha(C: Char): Boolean; inline;
   begin
     Result := TCharacter.IsLetter(C) or (C = '_');
@@ -9642,7 +9639,7 @@ begin
   	Result := Value;
 end;
 
-function GetFileContent(AFilename: string; AEncoding: TEncoding): string;
+function GetFileContent(const AFilename: string; AEncoding: TEncoding): string;
 var
   Stream: TFileStream;
   Size: integer;
