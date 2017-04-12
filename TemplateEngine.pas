@@ -21,6 +21,8 @@
 // The initial developer of the original code is Adit Software
 // written by Denis Sletkov (dvd@dvdchief.com, dvdchief.com/delphi).
 
+{$WARN SYMBOL_DEPRECATED OFF}
+
 unit TemplateEngine;
 
 {$J-}    //Writeable typed constants off
